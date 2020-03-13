@@ -1,0 +1,3 @@
+[MASTER]
+ignored-modules=maya,PySide2,pymel
+disable=C0103
