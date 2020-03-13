@@ -56,7 +56,7 @@ Use this plugin to build and validate that your Icon will meet the submission gu
 
 ## Links
 
-- [Developer Portal]("https://developer.magicleap.com")
-- [Submission Guidelines]("https://developer.magicleap.com/learn/guides/content-guidelines")
-- [The Lab]("https://developer.magicleap.com/downloads/lab")
-- [Magic Leap Forums]("https://forum.magicleap.com/hc/en-us/community/topics")
+- [Developer Portal](https://developer.magicleap.com)
+- [Submission Guidelines](https://developer.magicleap.com/learn/guides/content-guidelines)
+- [The Lab](https://developer.magicleap.com/downloads/lab)
+- [Magic Leap Forums](https://forum.magicleap.com/hc/en-us/community/topics)
