@@ -665,15 +665,15 @@ def getMaterialsForMeshes(meshes):
     Returns:
         list[list[list[str], list[str]]]
     """
-    mats = []
-    unsupportedMats = []
+    mats = set()
+    unsupportedMats = set()
 
     for mesh in meshes:
         meshMats, unsupported = getMaterialsForMesh(mesh)
-        mats.extend(meshMats)
-        unsupportedMats.extend(unsupported)
+        mats.union(meshMats)
+        unsupportedMats.union(unsupported)
 
-    return mats, unsupportedMats
+    return list(mats), list(unsupportedMats)
 
 
 def getTexturesFromMaterials(materials):
