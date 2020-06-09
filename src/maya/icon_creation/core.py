@@ -40,14 +40,14 @@ def getMObject(nodeName):
 
 def getNodePath(node):
     """Get a node's full path name.
-    
+
     Args:
         node(OpenMaya.MObject): An existing node.
     Returns:
         str
     """
     dag = OpenMaya.MFnDagNode(node)
-    
+
     return dag.fullPathName()
 
 
@@ -102,15 +102,15 @@ def getIconSettings():
         dict
     """
     settings = {}
-    
+
     node = getIconTemplateNode()
 
     try:
         depNode = OpenMaya.MFnDependencyNode(node)
-        
+
         plug = depNode.findPlug('iconSettings', False)
         rawSettingsData = plug.asString()
-        
+
         settings = json.loads(rawSettingsData)
     except ValueError:
         LOG.info('No settings data found on Icon Template.')
@@ -131,7 +131,7 @@ def saveIconSettings(data={}):
 
     try:
         depNode = OpenMaya.MFnDependencyNode(node)
-        
+
         settings = json.dumps(data)
 
         plug = depNode.findPlug('iconSettings', False)
@@ -146,7 +146,7 @@ def saveOutputPath(value):
 
     Args:
         value(str): file path.
-    
+
     Returns:
         None
     """
@@ -164,7 +164,7 @@ def saveSDKPath(value):
 
     Args:
         value(str): file path.
-    
+
     Returns:
         None
     """
@@ -187,23 +187,29 @@ def importTemplate(**settings):
         bool
     """
     if iconTemplateExists():
-        LOG.exception('template already in the scene, delete it and try again.')
+        LOG.exception(
+            'template already in the scene, delete it and try again.')
         return False
 
     namespace = ':{0}'.format(utils.ICON_TEMPLATE_NS)
-    
+
     if not cmds.namespace(exists=namespace):
         cmds.namespace(add=namespace)
-    
-    templateRootNode = cmds.createNode('transform', name='{0}:IconTemplate'.format(namespace))
+
+    templateRootNode = cmds.createNode(
+        'transform', name='{0}:IconTemplate'.format(namespace))
     utils.setMetaType(templateRootNode, utils.MTYPE_ICON_TEMPLATE_NODE)
     cmds.addAttr(templateRootNode, longName='iconSettings', dataType='string')
 
-    modelGroupNode = cmds.createNode('transform', name='{0}:Model'.format(namespace))
-    utils.connect('{0}.modelComponent'.format(templateRootNode), '{0}.IconTemplate'.format(modelGroupNode))
+    modelGroupNode = cmds.createNode(
+        'transform', name='{0}:Model'.format(namespace))
+    utils.connect('{0}.modelComponent'.format(templateRootNode),
+                  '{0}.IconTemplate'.format(modelGroupNode))
 
-    portalGroupNode = cmds.createNode('transform', name='{0}:Portal'.format(namespace))
-    utils.connect('{0}.portalComponent'.format(templateRootNode), '{0}.IconTemplate'.format(portalGroupNode))
+    portalGroupNode = cmds.createNode(
+        'transform', name='{0}:Portal'.format(namespace))
+    utils.connect('{0}.portalComponent'.format(templateRootNode),
+                  '{0}.IconTemplate'.format(portalGroupNode))
 
     cmds.parent(modelGroupNode, portalGroupNode, templateRootNode)
 
@@ -232,7 +238,7 @@ def iconTemplateExists():
         bool
     """
     iconTemplateNodePaths = utils.getMetaType(utils.MTYPE_ICON_TEMPLATE_NODE)
-    
+
     if iconTemplateNodePaths:
         return True
 
@@ -241,7 +247,7 @@ def iconTemplateExists():
 
 def buildIcon(validate=True, export=False, cleanup=True):
     """Build a valid Portal Icon.
-    
+
     Args:
         validate(bool): Should the icon be validated after a successful build.
         export(bool): Should the icon be bundled after a successful build.
@@ -263,7 +269,7 @@ def buildIcon(validate=True, export=False, cleanup=True):
     except Exception as err:
         LOG.exception('something went wrong exporting.')
         result = False
-    
+
     return result
 
 
@@ -296,19 +302,21 @@ def validateIcon():
     # Most validation should go into the icon-converter, other
     # validations related to Maya are handled above.
     outputPath = getIconDirectory()
-    
+
     # modelPath and portalPath need to be Unix styled paths for
     # the icon-converter.
-    modelPath = '{0}/{1}'.format(os.path.basename(outputPath), utils.MODEL_FOLDER_NAME)
+    modelPath = '{0}/{1}'.format(os.path.basename(outputPath),
+                                 utils.MODEL_FOLDER_NAME)
 
-    portalPath = '{0}/{1}'.format(os.path.basename(outputPath), utils.PORTAL_FOLDER_NAME)
+    portalPath = '{0}/{1}'.format(os.path.basename(outputPath),
+                                  utils.PORTAL_FOLDER_NAME)
 
     executable = utils.getIconConverter()
-    
+
     cmd = [
         executable,
         'validate',
-        '--format', 'json', 
+        '--format', 'json',
         '-m', modelPath,
         '--local-model-folder', utils.MODEL_FOLDER_NAME,
         '-p', portalPath,
@@ -396,7 +404,7 @@ def exportIcon():
 
 def getIconDirectory():
     """Get the icon export root directory.
-    
+
     Returns:
         str
     """
@@ -414,7 +422,7 @@ def getIconDirectory():
 
 def exportIconComponent(componentType):
     """Export out the given icon component.
-    
+
     Args:
         componentType(str): Model or Portal.
 
@@ -438,7 +446,7 @@ def exportIconComponent(componentType):
 
     meshes = getMeshesRecursive(node)
     materials, unsupportedMaterials = getMaterialsForMeshes(meshes)
-    
+
     # Make sure material names are all unique to avoid validation errors.
     # If multiple copies of a material are listed in a KMAT, icon-converter fails,
     # submission tests.
@@ -449,9 +457,10 @@ def exportIconComponent(componentType):
 
     # Export textures, need to do this before KMAT.
     for texture in textureFilePaths:
-        textureExportPath = utils.mergePaths(outputDirectory, os.path.basename(texture))
+        textureExportPath = utils.mergePaths(
+            outputDirectory, os.path.basename(texture))
         utils.exportTexture(texture, textureExportPath)
-    
+
     # Export KMAT.
     kmatData = {
         'global': {
@@ -470,18 +479,24 @@ def exportIconComponent(componentType):
             if not textureFilePath:
                 continue
             fileName = os.path.basename(textureFilePath)
-            relativeTexture = '{0}/{1}/{2}'.format(os.path.basename(iconDirectory), componentType, fileName)
-            materialDefinition['albedo'] = materialDefinition['albedo'].format(relativeTexturePath=relativeTexture)
-            materialDefinition['name'] = materialDefinition['name'].format(shaderName=mat)
+            relativeTexture = '{0}/{1}/{2}'.format(
+                os.path.basename(iconDirectory), componentType, fileName)
+            materialDefinition['albedo'] = materialDefinition['albedo'].format(
+                relativeTexturePath=relativeTexture)
+            materialDefinition['name'] = materialDefinition['name'].format(
+                shaderName=mat)
         else:
             colorRGB = cmds.getAttr(mat + '.color')[0]
-            materialDefinition['color'] = [colorRGB[0], colorRGB[1], colorRGB[2], 1]
-            materialDefinition['name'] = materialDefinition['name'].format(shaderName=mat)
+            materialDefinition['color'] = [
+                colorRGB[0], colorRGB[1], colorRGB[2], 1]
+            materialDefinition['name'] = materialDefinition['name'].format(
+                shaderName=mat)
             materialDefinition.pop('albedo')
 
         kmatData['materials'].append(materialDefinition)
 
-    kmatPath = utils.mergePaths(outputDirectory, '{0}.kmat'.format(componentType))
+    kmatPath = utils.mergePaths(
+        outputDirectory, '{0}.kmat'.format(componentType))
     with open(kmatPath, 'w+') as fp:
         json.dump(kmatData, fp, indent=2)
 
@@ -515,7 +530,8 @@ def exportIconComponent(componentType):
     cmds.select(bakeableNodes, replace=True)
 
     # Export an FBX that is the base format for the Icon.
-    fbxPath = utils.mergePaths(outputDirectory, '{0}.fbx'.format(componentType))
+    fbxPath = utils.mergePaths(
+        outputDirectory, '{0}.fbx'.format(componentType))
     settingsData = getIconSettings()
     animationTakes = settingsData.get('animationTakes', [])
     err = utils.exportFBX(fbxPath, selectionOnly=True, takes=animationTakes)
@@ -556,12 +572,13 @@ def bakeTransforms():
         nodePath = utils.getNodePath(transform)
 
         children = getChildren(node=transform, recursive=False)
-        
+
         childrenNodePaths = [utils.getNodePath(child) for child in children]
         cmds.parent(childrenNodePaths, world=True)
 
         LOG.info('Baking transform on {0}'.format(nodePath))
-        cmds.makeIdentity(nodePath, apply=True, translate=True, rotate=True, scale=True)
+        cmds.makeIdentity(nodePath, apply=True,
+                          translate=True, rotate=True, scale=True)
 
         childrenNodePaths = [utils.getNodePath(child) for child in children]
         cmds.parent(childrenNodePaths, nodePath)
@@ -586,7 +603,8 @@ def bakeAnimation():
 
     unsupportedNodes = []
     for nodeType in constants.INVALID_NODE_TYPES:
-        unsupported = getChildren(node=iconTemplateNode, recursive=True, nodeType=nodeType)
+        unsupported = getChildren(
+            node=iconTemplateNode, recursive=True, nodeType=nodeType)
         unsupportedNodes.extend(unsupported)
 
     supportedNodes = [x for x in transforms if x not in unsupportedNodes]
@@ -639,9 +657,11 @@ def getMaterialsForMesh(mesh):
         LOG.exception('{0} does not exist in the scene.'.format(mesh))
         return []
 
-    engines = cmds.listConnections(mesh, type='shadingEngine', destination=True, source=False) or []
+    engines = cmds.listConnections(
+        mesh, type='shadingEngine', destination=True, source=False) or []
     for engine in engines:
-        connectedMaterials = cmds.listConnections(engine + '.surfaceShader', source=True) or []
+        connectedMaterials = cmds.listConnections(
+            engine + '.surfaceShader', source=True) or []
 
         for material in connectedMaterials:
             if cmds.nodeType(material) not in constants.VALID_MATERIAL_TYPES:
@@ -658,30 +678,30 @@ def getMaterialsForMesh(mesh):
 
 def getMaterialsForMeshes(meshes):
     """Get assigned materials on a meshes.
-    
+
     Args:
         meshes(list[str | OpenMaya.MObject]): Mesh node path names.
 
     Returns:
         list[list[list[str], list[str]]]
     """
-    mats = []
-    unsupportedMats = []
+    mats = set()
+    unsupportedMats = set()
 
     for mesh in meshes:
         meshMats, unsupported = getMaterialsForMesh(mesh)
-        mats.extend(meshMats)
-        unsupportedMats.extend(unsupported)
+        mats = mats.union(meshMats)
+        unsupportedMats = unsupportedMats.union(unsupported)
 
-    return mats, unsupportedMats
+    return list(mats), list(unsupportedMats)
 
 
 def getTexturesFromMaterials(materials):
     """Get texture files assigned to materials.
-    
+
     Args:
         materials(list[str]): Material names.
-    
+
     Returns:
         list[str]
     """
@@ -711,8 +731,9 @@ def getTexture(material):
         LOG.exception('{0} does not exist in the scene.'.format(material))
         return
 
-    fileNodes = cmds.listConnections(material + '.color', source=True, type=constants.FILE_NODE_TYPE) or []
-    
+    fileNodes = cmds.listConnections(
+        material + '.color', source=True, type=constants.FILE_NODE_TYPE) or []
+
     if not fileNodes:
         LOG.debug('No file node connected to material color attribute.')
         return
@@ -722,7 +743,7 @@ def getTexture(material):
 
 def isValidMaterial(material):
     """Check if a given material is one of the valid types.
-    
+
     Args:
         material(str): Material name.
 
@@ -755,7 +776,8 @@ def setColorTexture(material, textureFilePath):
         texture = createFileTexture()
         cmds.connectAttr(texture + '.outColor', material + '.color')
 
-    cmds.setAttr(texture + '.' + utils.FILE_PATH_ATTR, textureFilePath, type='string')
+    cmds.setAttr(texture + '.' + utils.FILE_PATH_ATTR,
+                 textureFilePath, type='string')
 
 
 def createFileTexture():
@@ -859,15 +881,15 @@ def getChildren(node, recursive=True, nodeType=OpenMaya.MFn.kTransform):
         list[OpenMaya.MObject]
     """
     result = []
-    
+
     dagNode = OpenMaya.MFnDagNode(node)
-    
+
     for i in range(dagNode.childCount()):
         childMObject = dagNode.child(i)
 
         if childMObject.hasFn(nodeType):
             result.append(childMObject)
-            
+
         if recursive:
             result.extend(getChildren(childMObject, recursive, nodeType))
 
@@ -886,10 +908,10 @@ def getMeshes(node):
     result = []
 
     dag = OpenMaya.MFnDagNode(node)
-    
+
     for i in range(dag.childCount()):
         childMObject = dag.child(i)
-    
+
         if childMObject.hasFn(OpenMaya.MFn.kMesh):
             result.append(childMObject)
 
@@ -919,10 +941,10 @@ def checkSceneSettings():
 
     linearUnits = cmds.currentUnit(query=True, linear=True)
     linearUnitsChecked = True if linearUnits == constants.ICON_LINEAR_UNITS else False
-    
+
     timeUnits = cmds.currentUnit(query=True, time=True)
     timeUnitsChecked = True if timeUnits == constants.ICON_ANIMATION_FPS else False
-    
+
     return dict(units=linearUnitsChecked, fps=timeUnitsChecked)
 
 
@@ -937,6 +959,7 @@ def getSceneSettings():
 
     return dict(units=linearUnits, fps=timeUnits)
 
+
 def setSceneSettings(units=True, fps=True):
     """Set the time or fps units.
 
@@ -949,7 +972,7 @@ def setSceneSettings(units=True, fps=True):
     """
     if units:
         cmds.currentUnit(linear=constants.ICON_LINEAR_UNITS)
-    
+
     if fps:
         cmds.currentUnit(time=constants.ICON_ANIMATION_FPS)
 
@@ -989,7 +1012,7 @@ def getFPSValue():
 
 def updateClipData(payload={}):
     """Set animation clip data.
-    
+
     Args:
         payload(dict): Animation data.
 
@@ -1060,7 +1083,8 @@ def getAnimationData(asDict=True):
 
     result = {}
     for item in animData:
-        result[item['name']] = dict(startFrame=item['startFrame'], endFrame=item['endFrame'])
+        result[item['name']] = dict(
+            startFrame=item['startFrame'], endFrame=item['endFrame'])
 
     return result
 
@@ -1084,7 +1108,7 @@ def createIconZip():
                     yield os.path.join(roots, fn)
 
     iconDirectory = getIconDirectory()
-    
+
     if iconDirectory is None:
         LOG.exception('cannot create zip for Icon, missing outputPath.')
 
@@ -1162,7 +1186,8 @@ def openIconPreviewer(iconZipPath, mlsdkPath=None):
         cmd = ' '.join(sendIconCmd)
         LOG.info('Attempting command: %s', cmd)
         LOG.info(os.environ)
-        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True, env=os.environ)
+        output = subprocess.check_output(
+            cmd, stderr=subprocess.STDOUT, shell=True, env=os.environ)
         LOG.info(output)
         result = ''
     except Exception as err:
@@ -1189,12 +1214,14 @@ def checkForAnimatedTransforms(node, startFrame, endFrame):
     """
     checked = False
 
-    childrenNodes = getChildren(node, recursive=True, nodeType=OpenMaya.MFn.kTransform)
+    childrenNodes = getChildren(
+        node, recursive=True, nodeType=OpenMaya.MFn.kTransform)
     childrenNodePaths = [getNodePath(child) for child in childrenNodes]
 
     for childNodePath in childrenNodePaths:
         for attrName in ['translate', 'rotate', 'scale']:
-            kwargs = dict(query=True, time=(startFrame, endFrame), timeChange=True)
+            kwargs = dict(query=True, time=(
+                startFrame, endFrame), timeChange=True)
             attrPath = '{0}.{1}'.format(childNodePath, attrName)
             if cmds.keyframe(attrPath, **kwargs):
                 return True
@@ -1216,7 +1243,8 @@ def checkModelForAnimatedTransforms():
     animData = settingsData.get('animationTakes', [])
 
     for take in animData:
-        takeChecked = checkForAnimatedTransforms(node, take['startFrame'], take['endFrame'])
+        takeChecked = checkForAnimatedTransforms(
+            node, take['startFrame'], take['endFrame'])
         if takeChecked:
             return True
 
@@ -1237,7 +1265,8 @@ def checkPortalForAnimatedTransforms():
     animData = settingsData.get('animationTakes', [])
 
     for take in animData:
-        takeChecked = checkForAnimatedTransforms(node, take['startFrame'], take['endFrame'])
+        takeChecked = checkForAnimatedTransforms(
+            node, take['startFrame'], take['endFrame'])
         if takeChecked:
             return True
 
@@ -1255,7 +1284,8 @@ def checkAttrForKeys(nodePath, attrName, frame):
     Return:
         bool
     """
-    keys = cmds.keyframe('{0}.{1}'.format(nodePath, attrName), query=True, time=(frame, frame), timeChange=True)
+    keys = cmds.keyframe('{0}.{1}'.format(
+        nodePath, attrName), query=True, time=(frame, frame), timeChange=True)
 
     checked = False
 
@@ -1271,7 +1301,7 @@ def checkTRSForKeys(nodePath, frame):
     Args:
         nodePath(str): Node name.
         frame(int): Frame number.
-    
+
     Returns:
         bool
     """
@@ -1286,11 +1316,11 @@ def checkTRSForKeys(nodePath, frame):
 
 def checkTakeForAnimation(startFrame, endFrame):
     """Check to make sure animation clip has a start and end keyframe.
-    
+
     Args:
         startFrame(int): First frame.
         endFrame(int): Last frame.
-    
+
     Returns:
         bool
     """
@@ -1300,7 +1330,8 @@ def checkTakeForAnimation(startFrame, endFrame):
         return checked
 
     node = getModelComponentNode()
-    childrenNodes = getChildren(node, recursive=True, nodeType=OpenMaya.MFn.kJoint)
+    childrenNodes = getChildren(
+        node, recursive=True, nodeType=OpenMaya.MFn.kJoint)
     childrenNodePaths = [getNodePath(child) for child in childrenNodes]
 
     for childNodePath in childrenNodePaths:
