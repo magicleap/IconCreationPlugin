@@ -7,7 +7,7 @@ PLATFORM_LIST = Windows MacOS
 VIRTUAL_ENV_DIR = _venv
 
 # Maya
-MAYA_VERSION = 2018
+MAYA_VERSION = 2020
 BUILD_MAYA := ./scripts/build-maya.sh
 DEV_MAYA := ./scripts/dev-maya.sh
 
@@ -29,14 +29,14 @@ build-windows:
 	export MAYA_MODULE_PATH=$$WORKSPACE/dist/$$PLATFORM/maya/modules; \
 	${BUILD_MAYA} && \
 	cd $$WORKSPACE/dist/$$PLATFORM/maya/modules && \
-	zip -r $$WORKSPACE/dist/IconCreationPlugin-$$PLATFORM-0.1.0.zip ./*
+	zip -r $$WORKSPACE/dist/IconCreationPlugin-$$PLATFORM-0.2.0.zip ./*
 
 build-mac:
 	export PLATFORM=MacOS; \
 	export MAYA_MODULE_PATH=$$WORKSPACE/dist/$$PLATFORM/maya/modules; \
 	${BUILD_MAYA} && \
 	cd $$WORKSPACE/dist/$$PLATFORM/maya/modules && \
-	zip -r $$WORKSPACE/dist/IconCreationPlugin-$$PLATFORM-0.1.0.zip ./*
+	zip -r $$WORKSPACE/dist/IconCreationPlugin-$$PLATFORM-0.2.0.zip ./*
 
 .PHONY : dev
 dev: clean build dev-windows dev-mac
