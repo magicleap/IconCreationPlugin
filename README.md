@@ -1,3 +1,6 @@
+> [!CAUTION]  
+> As of December 31, 2024 Magic Leap 1 and its services are no longer supported.
+
 # Portal Icon Plugin
 
 ## Summary
